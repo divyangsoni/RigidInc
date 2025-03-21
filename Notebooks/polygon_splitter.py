@@ -1,6 +1,17 @@
-from shapely.geometry import Polygon, LineString, Point
+#!/usr/bin/env python
+# coding: utf-8
+
+"""
+polygon_splitter.py
+
+This module provides a function to split a polygon into two areas based on a line.
+Useful for structural engineering applications like pile cap one-way shear and moment analysis.
+"""
+
+import numpy as np
+from shapely.geometry import Polygon, LineString
 from shapely.ops import split
-from matplotlib.patches import Polygon as MplPolygon
+
 
 def split_polygon_by_line(polygon_vertices, line_type, line_value, column_centroid=None):
     """
