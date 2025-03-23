@@ -8,8 +8,8 @@ This module provides functions to:
 1. Analyze pile areas and reactions in relation to a line cutting through the pile cap.
 2. Calculate moments above/below or left/right of a section line.
 
-Author: [Your Name]
-Date: [Today's Date]
+Author: Divyang
+Date: 03/22/2025
 """
 
 import numpy as np
