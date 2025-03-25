@@ -12,6 +12,7 @@ def plot_foundation_analysis(
     column_size,
     column_centroid,
     pile_cap_thickness,
+    pile_cap_shear_depth,
     one_way_shear_1_line_type,
     one_way_shear_1_line_value,
     one_way_shear_2_line_type,
@@ -136,7 +137,7 @@ def plot_foundation_analysis(
     # 7. Annotate the Pile Cap Thickness
     # -------------------------------
     # Position the annotation just outside the bottom-right corner of the pile cap.
-    offset_x = -4.0  # adjust as needed
+    offset_x = -5.0  # adjust as needed
     offset_y = 0.5  # adjust as needed
     ax.text(max_x + offset_x, min_y + offset_y, f"Thickness = {pile_cap_thickness:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
@@ -153,6 +154,14 @@ def plot_foundation_analysis(
     ax.text(min_x + offset_x, min_y + offset_y, text,
             fontsize=10, color='black', ha='left', va='top')
 
+    # -------------------------------
+    # 9. Annotate the Pile Cap Shear Thickness
+    # -------------------------------
+    # Position the annotation just outside the bottom-right corner of the pile cap.
+    offset_x = -5.0  # adjust as needed
+    offset_y = 1.0  # adjust as needed
+    ax.text(max_x + offset_x, min_y + offset_y, f"Shear Depth = {pile_cap_shear_depth:.3f} ft.",
+            fontsize=10, color='black', ha='left', va='top')
 
     # -------------------------------
     # Final Plot Settings
