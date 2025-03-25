@@ -36,7 +36,7 @@ def plot_foundation_analysis(
     """
 
     # Set the font to Arial (or any other available font)
-    plt.rcParams['font.family'] = 'Baskerville'
+    plt.rcParams['font.family'] = 'Segoe UI'
     
     # First, determine the extents of the pile cap to adapt the figure size:
     min_x, min_y = np.min(pile_cap_vertices, axis=0)

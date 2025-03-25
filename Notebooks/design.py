@@ -11,7 +11,7 @@ def calculate_area_of_steel(moment, pile_cap_shear_depth):
     Returns:
         float: The area of steel computed as moment / (4 * pile_cap_shear_depth).
     """
-    return moment / (4 * pile_cap_shear_depth)
+    return moment / (4 * pile_cap_shear_depth * 12)
 
 
 def calculate_punching_shear_capacity(
