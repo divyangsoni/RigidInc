@@ -8,6 +8,7 @@ def plot_foundation_analysis(
     pile_cap_vertices,
     pile_layout,
     pile_size,
+    pile_reactions, 
     column_size,
     column_centroid,
     pile_cap_thickness,
@@ -23,8 +24,12 @@ def plot_foundation_analysis(
     one_way_shear_section_2,
     one_way_moment_section_4,
     one_way_moment_section_3,
+    area_of_steel_section_1,
+    area_of_steel_section_2,
     shear_polygon_coords,
-    total_reaction_outside
+    total_reaction_outside,
+    punching_shear_capacity: float,
+    utilization_ratio: float
 ):
     """
     Plot the foundation analysis results.
@@ -50,15 +55,22 @@ def plot_foundation_analysis(
     ax.add_patch(pile_cap_poly)
 
     # -------------------------------
-    # 2. Plot Each Pile
+    # 2. Plot Each Pile + Reaction
     # -------------------------------
     half_pile = pile_size / 2.0
     for i, (px, py) in enumerate(pile_layout):
         lower_left = (px - half_pile, py - half_pile)
         pile_rect = Rectangle(lower_left, pile_size, pile_size,
-                              edgecolor='blue', facecolor='lightblue', linewidth=1)
+                            edgecolor='blue', facecolor='lightblue', linewidth=1)
         ax.add_patch(pile_rect)
-        ax.text(px, py, str(i + 1), color='blue', fontsize=10, ha='center', va='center')
+        # Pile number at center
+        ax.text(px, py, str(i+1), color='blue', fontsize=10, ha='center', va='center')
+        # Reaction value just below
+        ax.text(px, py - (half_pile + 0.1),
+            f"{pile_reactions[i].item():.3f} kips",
+            color='black', fontsize=8, ha='center', va='top')
+
+
 
     # -------------------------------
     # 3. Plot the Column
@@ -67,9 +79,9 @@ def plot_foundation_analysis(
     column_cx, column_cy = column_centroid
     col_lower_left = (column_cx - column_width / 2, column_cy - column_height / 2)
     column_rect = Rectangle(col_lower_left, column_width, column_height,
-                            edgecolor='red', facecolor='none', linewidth=2)
+                            edgecolor='magenta', facecolor='none', linewidth=2)
     ax.add_patch(column_rect)
-    ax.text(column_cx, column_cy, 'Column', color='red', fontsize=10, ha='center', va='center')
+    ax.text(column_cx, column_cy, 'Column', color='magenta', fontsize=10, ha='center', va='center')
 
     # -------------------------------
     # 4. Plot the One-Way Shear Section Lines with Labeled Values
@@ -80,15 +92,15 @@ def plot_foundation_analysis(
         x_vals = np.linspace(min_x - 5, max_x + 5, 100)
         y_vals = m * x_vals + c
         ax.plot(x_vals, y_vals, color='green', linestyle='--', linewidth=2,
-                label=f"One-way shear section 1: {one_way_shear_section_1:.3f} kips")
+                label=f"One-way shear @ section 1: {one_way_shear_section_1:.3f} kips")
 
     # Section 2: One-way shear section (vertical line)
     if one_way_shear_2_line_type == 'vertical':
         x_val = one_way_shear_2_line_value[0]
         y_vals = np.linspace(min_y - 5, max_y + 5, 100)
         x_vals = np.full_like(y_vals, x_val)
-        ax.plot(x_vals, y_vals, color='green', linestyle='--', linewidth=2,
-                label=f"One-way shear section 2: {one_way_shear_section_2:.3f} kips")
+        ax.plot(x_vals, y_vals, color='cyan', linestyle='--', linewidth=2,
+                label=f"One-way shear @ section 2: {one_way_shear_section_2:.3f} kips")
 
     # -------------------------------
     # 5. Plot the One-Way Moment Section Lines with Labeled Values
@@ -99,23 +111,25 @@ def plot_foundation_analysis(
         x_vals = np.linspace(min_x - 5, max_x + 5, 100)
         y_vals = m * x_vals + c
         ax.plot(x_vals, y_vals, color='orange', linestyle=':', linewidth=2,
-                label=f"One-way moment section 1: {one_way_moment_section_4:.3f} kip-ft")
+                label=f"One-way moment @ section 1: {one_way_moment_section_4:.3f} kip-ft "
+                f"(A = {area_of_steel_section_1:.3f} sq. in.)")
 
     # Section 2: One-way moment section (vertical line)
     if one_way_moment_2_line_type == 'vertical':
         x_val = one_way_moment_2_line_value[0]
         y_vals = np.linspace(min_y - 5, max_y + 5, 100)
         x_vals = np.full_like(y_vals, x_val)
-        ax.plot(x_vals, y_vals, color='orange', linestyle=':', linewidth=2,
-                label=f"One-way moment section 2: {one_way_moment_section_3:.3f} kip-ft")
+        ax.plot(x_vals, y_vals, color='red', linestyle=':', linewidth=2,
+                label=f"One-way moment @ section 2: {one_way_moment_section_3:.3f} kip-ft " 
+                f"(A = {area_of_steel_section_2:.3f} sq. in.)")
 
     # -------------------------------
     # 6. Plot the Shear Polygon (Punching Shear Polygon) with Label Including total_reaction_outside
     # -------------------------------
     if shear_polygon_coords:
-        punching_shear_poly = MplPolygon(shear_polygon_coords, edgecolor='purple', facecolor='none',
+        punching_shear_poly = MplPolygon(shear_polygon_coords, edgecolor='blue', facecolor='none',
                                          linewidth=2, linestyle='-.',
-                                         label=f"Punching shear polygon: {total_reaction_outside:.3f} kips")
+                                         label=f"Punching shear: {total_reaction_outside:.3f} kips")
         ax.add_patch(punching_shear_poly)
 
     # -------------------------------
@@ -126,6 +140,19 @@ def plot_foundation_analysis(
     offset_y = 0.5  # adjust as needed
     ax.text(max_x + offset_x, min_y + offset_y, f"Thickness = {pile_cap_thickness:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
+    
+    # -------------------------------
+    # 8. Annotate Punching Shear Capacity & Utilization
+    # -------------------------------
+    offset_x = 0.0
+    offset_y = -0.5
+    text = (
+        f"Punching shear capacity: {punching_shear_capacity:.3f} kips\n"
+        f"Utilization: {utilization_ratio:.1f}%"
+    )
+    ax.text(min_x + offset_x, min_y + offset_y, text,
+            fontsize=10, color='black', ha='left', va='top')
+
 
     # -------------------------------
     # Final Plot Settings
