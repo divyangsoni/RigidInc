@@ -48,7 +48,7 @@ def plot_foundation_analysis(
     height_ft = max_y - min_y
 
     # Set a scale factor (inches per foot) for the figure size
-    scale = 0.7  # Adjust this value as needed
+    scale = 2.5  # Adjust this value as needed
     fig, ax = plt.subplots(figsize=(width_ft * scale, height_ft * scale))
 
     # -------------------------------
@@ -142,7 +142,7 @@ def plot_foundation_analysis(
     # -------------------------------
     # Position the annotation just outside the bottom-right corner of the pile cap.
     offset_x = 0.25  # adjust as needed
-    offset_y = 0.5  # adjust as needed
+    offset_y = -0.5  # adjust as needed
     ax.text(min_x + offset_x, min_y + offset_y, f"Thickness = {pile_cap_thickness:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
     
@@ -150,7 +150,7 @@ def plot_foundation_analysis(
     # 8. Annotate Punching Shear Capacity & Utilization
     # -------------------------------
     offset_x = 0.25
-    offset_y = -0.5
+    offset_y = -2.5
     text = (
         f"Punching shear capacity: {punching_shear_capacity:.3f} kips\n"
         f"Utilization: {utilization_ratio:.1f}%"
@@ -163,7 +163,7 @@ def plot_foundation_analysis(
     # -------------------------------
     # Position the annotation just outside the bottom-right corner of the pile cap.
     offset_x = 0.25  # adjust as needed
-    offset_y = 1.0  # adjust as needed
+    offset_y = -1.0  # adjust as needed
     ax.text(min_x + offset_x, min_y + offset_y, f"Shear Depth = {pile_cap_shear_depth:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
     
@@ -176,7 +176,7 @@ def plot_foundation_analysis(
         shear_perimeter = shear_poly.length
         # Adjust offsets relative to the thickness annotation:
         offset_x2 = 0.25    # Same as thickness offset_x
-        offset_y2 = 1.5    # Slightly lower than thickness annotation (adjust as needed)
+        offset_y2 = -1.5    # Slightly lower than thickness annotation (adjust as needed)
         ax.text(min_x + offset_x2, min_y + offset_y2,
                 f"Punching Shear Perimeter: {shear_perimeter:.3f} ft",
                 fontsize=10, color='black', ha='left', va='top')
