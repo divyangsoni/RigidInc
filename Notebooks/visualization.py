@@ -3,6 +3,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon as MplPolygon, Rectangle
+from shapely.geometry import Polygon
+
 
 def plot_foundation_analysis(
     pile_cap_vertices,
@@ -37,7 +39,7 @@ def plot_foundation_analysis(
     """
 
     # Set the font to Arial (or any other available font)
-    plt.rcParams['font.family'] = 'Segoe UI'
+    plt.rcParams['font.family'] = 'Georgia'
     
     # First, determine the extents of the pile cap to adapt the figure size:
     min_x, min_y = np.min(pile_cap_vertices, axis=0)
@@ -83,6 +85,8 @@ def plot_foundation_analysis(
                             edgecolor='magenta', facecolor='none', linewidth=2)
     ax.add_patch(column_rect)
     ax.text(column_cx, column_cy, 'Column', color='magenta', fontsize=10, ha='center', va='center')
+
+
 
     # -------------------------------
     # 4. Plot the One-Way Shear Section Lines with Labeled Values
@@ -137,15 +141,15 @@ def plot_foundation_analysis(
     # 7. Annotate the Pile Cap Thickness
     # -------------------------------
     # Position the annotation just outside the bottom-right corner of the pile cap.
-    offset_x = -5.0  # adjust as needed
+    offset_x = 0.25  # adjust as needed
     offset_y = 0.5  # adjust as needed
-    ax.text(max_x + offset_x, min_y + offset_y, f"Thickness = {pile_cap_thickness:.3f} ft.",
+    ax.text(min_x + offset_x, min_y + offset_y, f"Thickness = {pile_cap_thickness:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
     
     # -------------------------------
     # 8. Annotate Punching Shear Capacity & Utilization
     # -------------------------------
-    offset_x = 0.0
+    offset_x = 0.25
     offset_y = -0.5
     text = (
         f"Punching shear capacity: {punching_shear_capacity:.3f} kips\n"
@@ -158,10 +162,25 @@ def plot_foundation_analysis(
     # 9. Annotate the Pile Cap Shear Thickness
     # -------------------------------
     # Position the annotation just outside the bottom-right corner of the pile cap.
-    offset_x = -5.0  # adjust as needed
+    offset_x = 0.25  # adjust as needed
     offset_y = 1.0  # adjust as needed
-    ax.text(max_x + offset_x, min_y + offset_y, f"Shear Depth = {pile_cap_shear_depth:.3f} ft.",
+    ax.text(min_x + offset_x, min_y + offset_y, f"Shear Depth = {pile_cap_shear_depth:.3f} ft.",
             fontsize=10, color='black', ha='left', va='top')
+    
+
+    # -------------------------------
+    # 10. Annotate Shear Polygon Perimeter
+    # -------------------------------
+    if shear_polygon_coords:
+        shear_poly = Polygon(shear_polygon_coords)
+        shear_perimeter = shear_poly.length
+        # Adjust offsets relative to the thickness annotation:
+        offset_x2 = 0.25    # Same as thickness offset_x
+        offset_y2 = 1.5    # Slightly lower than thickness annotation (adjust as needed)
+        ax.text(min_x + offset_x2, min_y + offset_y2,
+                f"Punching Shear Perimeter: {shear_perimeter:.3f} ft",
+                fontsize=10, color='black', ha='left', va='top')
+
 
     # -------------------------------
     # Final Plot Settings
