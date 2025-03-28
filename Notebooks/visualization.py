@@ -31,6 +31,8 @@ def plot_foundation_analysis(
     area_of_steel_section_2,
     shear_polygon_coords,
     total_reaction_outside,
+    shear_capacity_1,
+    shear_capacity_2,
     punching_shear_capacity: float,
     utilization_ratio: float
 ):
@@ -48,7 +50,7 @@ def plot_foundation_analysis(
     height_ft = max_y - min_y
 
     # Set a scale factor (inches per foot) for the figure size
-    scale = 0.7  # Adjust this value as needed
+    scale = 1.0  # Adjust this value as needed
     fig, ax = plt.subplots(figsize=(width_ft * scale, height_ft * scale))
 
     # -------------------------------
@@ -147,12 +149,29 @@ def plot_foundation_analysis(
             fontsize=10, color='black', ha='left', va='top')
     
     # -------------------------------
-    # 8. Annotate Punching Shear Capacity & Utilization
+    # 7.5. Annotate the Column Dimensions
     # -------------------------------
+    # Position the annotation just outside the bottom-right corner of the pile cap.
+    offset_x = 0.25  # adjust as needed
+    offset_y = -0.25  # adjust as needed
+    ax.text(max_x + offset_x, min_y + offset_y, 
+        f"Column Width = {column_width*12:.3f} in.\nColumn Height = {column_height*12:.3f} in.",
+        fontsize=10, color='black', ha='right', va='top')
+    
+    # -------------------------------
+    # 8. Annotate Shear Capacity & Utilization
+    # -------------------------------
+
     offset_x = 0.25
     offset_y = -2.5
+    utilization_shear_1 = one_way_shear_section_1 / shear_capacity_1 * 100
+    utilization_shear_2 = one_way_shear_section_2 / shear_capacity_2 * 100
     text = (
-        f"Punching shear capacity: {punching_shear_capacity:.3f} kips\n"
+        f"One-way shear capacity (Section 1): {shear_capacity_1:.3f} kips, "
+        f"Utilization: {utilization_shear_1:.1f}%\n"
+        f"One-way shear capacity (Section 2): {shear_capacity_2:.3f} kips, "
+        f"Utilization: {utilization_shear_2:.1f}%\n"
+        f"Punching shear capacity: {punching_shear_capacity:.3f} kips, "
         f"Utilization: {utilization_ratio:.1f}%"
     )
     ax.text(min_x + offset_x, min_y + offset_y, text,
@@ -180,6 +199,8 @@ def plot_foundation_analysis(
         ax.text(min_x + offset_x2, min_y + offset_y2,
                 f"Punching Shear Perimeter: {shear_perimeter:.3f} ft",
                 fontsize=10, color='black', ha='left', va='top')
+        
+
 
 
     # -------------------------------
