@@ -50,7 +50,7 @@ def plot_foundation_analysis(
     height_ft = max_y - min_y
 
     # Set a scale factor (inches per foot) for the figure size
-    scale = 1.0  # Adjust this value as needed
+    scale = 0.6  # Adjust this value as needed
     fig, ax = plt.subplots(figsize=(width_ft * scale, height_ft * scale))
 
     # -------------------------------
