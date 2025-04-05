@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pile Cap Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        /* Optional: Add some spacing */
+        body { padding-top: 20px; padding-bottom: 40px; }
+        .results-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ccc; }
+        .results-card { margin-bottom: 15px; }
+        .log-box { max-height: 300px; overflow-y: auto; background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; font-family: monospace; font-size: 0.85em; white-space: pre-wrap; /* Wrap long lines */ }
+        .coords-textarea { font-family: monospace; height: 150px; } /* Style for textareas */
+        .form-section { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px dashed #eee; }
+        h5 { margin-top: 1.5rem; color: #0d6efd; } /* Section headers */
+        /* Initially hide conditional sections */
+        #rectangle-inputs { display: none; }
+        #polygon-inputs { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pile Cap Analysis Input</h1>
+        <p>Enter the parameters for the pile cap analysis. Default values are provided.</p>
+
+        <form method="POST" id="analysis-form">
+
+            <div class="form-section">
+                <h4>Geometry &amp; Materials</h4>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="pile_cap_thickness" class="form-label">Pile Cap Thickness (ft)</label>
+                        <input type="number" step="any" class="form-control" id="pile_cap_thickness" name="pile_cap_thickness" value="{{ form_data.pile_cap_thickness | default(defaults.pile_cap_thickness, true) }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="concrete_strength_psi" class="form-label">Concrete Strength f'c (psi)</label>
+                        <input type="number" step="1" class="form-control" id="concrete_strength_psi" name="concrete_strength_psi" value="{{ form_data.concrete_strength_psi | default(defaults.concrete_strength_psi, true) }}" required>
+                    </div>
+                     <div class="col-md-4 mb-3">
+                        <label for="concrete_density" class="form-label">Concrete Density (pcf)</label>
+                        <input type="number" step="any" class="form-control" id="concrete_density" name="concrete_density" value="{{ form_data.concrete_density | default(defaults.concrete_density, true) }}" required>
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="pile_embedment" class="form-label">Pile Embedment in Cap (ft)</label>
+                        <input type="number" step="any" class="form-control" id="pile_embedment" name="pile_embedment" value="{{ form_data.pile_embedment | default(defaults.pile_embedment, true) }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="soil_depth_above" class="form-label">Soil Depth Above Cap (ft)</label>
+                        <input type="number" step="any" class="form-control" id="soil_depth_above" name="soil_depth_above" value="{{ form_data.soil_depth_above | default(defaults.soil_depth_above, true) }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="soil_density" class="form-label">Soil Density (pcf)</label>
+                        <input type="number" step="any" class="form-control" id="soil_density" name="soil_density" value="{{ form_data.soil_density | default(defaults.soil_density, true) }}" required>
+                    </div>
+                 </div>
+                <div class="row">
+                     <div class="col-md-4 mb-3">
+                        <label for="assumed_cover_in" class="form-label">Assumed Cover (in)</label>
+                        <input type="number" step="any" class="form-control" id="assumed_cover_in" name="assumed_cover_in" value="{{ form_data.assumed_cover_in | default(defaults.assumed_cover_in, true) }}" required>
+                    </div>
+                     <div class="col-md-4 mb-3">
+                        <label for="assumed_bar_dia_in" class="form-label">Assumed Bar Diameter (#)</label>
+                        <input type="number" step="1" class="form-control" id="assumed_bar_dia_in" name="assumed_bar_dia_in" value="{{ form_data.assumed_bar_dia_in | default(defaults.assumed_bar_dia_in, true) }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="lambda_factor" class="form-label">Lambda Factor (λ)</label>
+                        <input type="number" step="any" class="form-control" id="lambda_factor" name="lambda_factor" value="{{ form_data.lambda_factor | default(defaults.lambda_factor, true) }}" required>
+                    </div>
+                </div>
+            </div>
+
+             <div class="form-section">
+                <h4>Column Properties</h4>
+                <div class="row">
+                     <div class="col-md-4 mb-3">
+                        <label for="column_size" class="form-label">Column Size (X, Y) (ft)</label>
+                        <input type="text" class="form-control" id="column_size" name="column_size" value="{{ form_data.column_size | default(defaults.column_size | join(', '), true) }}" placeholder="e.g., 2.5, 2.5" required>
+                    </div>
+                     <div class="col-md-4 mb-3">
+                        <label for="column_centroid" class="form-label">Column Centroid (X, Y) (ft)</label>
+                        <input type="text" class="form-control" id="column_centroid" name="column_centroid" value="{{ form_data.column_centroid | default(defaults.column_centroid | join(', '), true) }}" placeholder="e.g., 25, 9" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="column_eccentricity" class="form-label">Column Eccentricity (eX, eY) (ft)</label>
+                        <input type="text" class="form-control" id="column_eccentricity" name="column_eccentricity" value="{{ form_data.column_eccentricity | default(defaults.column_eccentricity | join(', '), true) }}" placeholder="e.g., 0, 0" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="column_location" class="form-label">Column Location (for Punching Shear)</label>
+                        <select class="form-select" id="column_location" name="column_location" required>
+                            <option value="interior" {% if form_data.column_location|default(defaults.column_location, true) == 'interior' %}selected{% endif %}>Interior</option>
+                            <option value="edge" {% if form_data.column_location|default(defaults.column_location, true) == 'edge' %}selected{% endif %}>Edge</option>
+                            <option value="corner" {% if form_data.column_location|default(defaults.column_location, true) == 'corner' %}selected{% endif %}>Corner</option>
+                        </select>
+                    </div>
+                </div>
+             </div>
+
+            <div class="form-section">
+                <h4>Pile Properties & Layout</h4>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                         <label for="pile_shape" class="form-label">Pile Shape</label>
+                         <select class="form-select" id="pile_shape" name="pile_shape" required>
+                             <option value="square" {% if form_data.pile_shape|default(defaults.pile_shape, true) == 'square' %}selected{% endif %}>Square</option>
+                             <option value="circular" {% if form_data.pile_shape|default(defaults.pile_shape, true) == 'circular' %}selected{% endif %}>Circular</option>
+                         </select>
+                    </div>
+                     <div class="col-md-3 mb-3">
+                         <label for="pile_size" class="form-label">Pile Size (Side/Diameter) (ft)</label>
+                         <input type="number" step="any" class="form-control" id="pile_size" name="pile_size" value="{{ form_data.pile_size | default(defaults.pile_size, true) }}" required>
+                    </div>
+                     <div class="col-md-3 mb-3">
+                         <label for="max_pile_compression" class="form-label">Max Pile Compression (kips)</label>
+                         <input type="number" step="any" class="form-control" id="max_pile_compression" name="max_pile_compression" value="{{ form_data.max_pile_compression | default(defaults.max_pile_compression, true) }}" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                         <label for="max_pile_tension" class="form-label">Max Pile Tension (kips)</label>
+                         <input type="number" step="any" class="form-control" id="max_pile_tension" name="max_pile_tension" value="{{ form_data.max_pile_tension | default(defaults.max_pile_tension, true) }}" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="pile_layout_str" class="form-label">Pile Layout (X, Y per line) (ft)</label>
+                        <textarea class="form-control coords-textarea" id="pile_layout_str" name="pile_layout_str" rows="6" placeholder="e.g.&#10;3.25, 4.5&#10;8.083, 4.5&#10;..." required>{{ form_data.pile_layout_str | default(defaults.pile_layout_str, true) }}</textarea>
+                        <div class="form-text">Enter each pile coordinate on a new line, separated by a comma.</div>
+                    </div>
+                </div>
+            </div>
+
+             <div class="form-section">
+                <h4>Pile Cap Shape</h4>
+                <div class="mb-3">
+                    <label class="form-label">Select Shape Type:</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="pile_cap_shape_type" id="shape_rectangle" value="rectangle" {% if form_data.pile_cap_shape_type|default(defaults.pile_cap_shape_type, true) == 'rectangle' %}checked{% endif %} required>
+                        <label class="form-check-label" for="shape_rectangle">Rectangle</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="pile_cap_shape_type" id="shape_polygon" value="polygon" {% if form_data.pile_cap_shape_type|default(defaults.pile_cap_shape_type, true) == 'polygon' %}checked{% endif %}>
+                        <label class="form-check-label" for="shape_polygon">Polygon (Custom Vertices)</label>
+                    </div>
+                </div>
+
+                <div id="rectangle-inputs">
+                     <h5>Rectangle Definition</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                             <label for="rect_bottom_left" class="form-label">Bottom-Left Corner (X, Y) (ft)</label>
+                             <input type="text" class="form-control" id="rect_bottom_left" name="rect_bottom_left" value="{{ form_data.rect_bottom_left | default(defaults.rect_bottom_left | join(', '), true) }}" placeholder="e.g., 1, 2.5">
+                        </div>
+                         <div class="col-md-6 mb-3">
+                             <label for="rect_top_right" class="form-label">Top-Right Corner (X, Y) (ft)</label>
+                             <input type="text" class="form-control" id="rect_top_right" name="rect_top_right" value="{{ form_data.rect_top_right | default(defaults.rect_top_right | join(', '), true) }}" placeholder="e.g., 49, 15.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="polygon-inputs">
+                    <h5>Polygon Vertex Definition</h5>
+                    <div class="mb-3">
+                        <label for="pile_cap_vertices_str" class="form-label">Pile Cap Vertices (X, Y per line) (ft)</label>
+                        <textarea class="form-control coords-textarea" id="pile_cap_vertices_str" name="pile_cap_vertices_str" rows="6" placeholder="e.g.&#10;1, 2.5&#10;49, 2.5&#10;49, 15.5&#10;1, 15.5">{{ form_data.pile_cap_vertices_str | default(defaults.pile_cap_vertices_str, true) }}</textarea>
+                        <div class="form-text">Enter each vertex coordinate on a new line, separated by a comma. Order matters (usually counter-clockwise). Minimum 3 vertices.</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="form-section">
+                <h4>Applied Loads at Column Centroid</h4>
+                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="Fz" class="form-label">Vertical Load Fz (kips)</label>
+                        <input type="number" step="any" class="form-control" id="Fz" name="Fz" value="{{ form_data.Fz | default(defaults.Fz, true) }}" required>
+                        <div class="form-text">Negative for downward load (compression).</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Mx" class="form-label">Moment about X-axis Mx (kip-ft)</label>
+                        <input type="number" step="any" class="form-control" id="Mx" name="Mx" value="{{ form_data.Mx | default(defaults.Mx, true) }}" required>
+                    </div>
+                     <div class="col-md-4 mb-3">
+                         <label for="My" class="form-label">Moment about Y-axis My (kip-ft)</label>
+                         <input type="number" step="any" class="form-control" id="My" name="My" value="{{ form_data.My | default(defaults.My, true) }}" required>
+                    </div>
+                 </div>
+                 <div class="row">
+                    <div class="col-md-4 mb-3">
+                         <label for="Fx" class="form-label">Horizontal Load Fx (kips)</label>
+                         <input type="number" step="any" class="form-control" id="Fx" name="Fx" value="{{ form_data.Fx | default(defaults.Fx, true) }}" required>
+                         <div class="form-text">(Note: Fx, Fy currently not used in reaction calc).</div>
+                    </div>
+                     <div class="col-md-4 mb-3">
+                         <label for="Fy" class="form-label">Horizontal Load Fy (kips)</label>
+                         <input type="number" step="any" class="form-control" id="Fy" name="Fy" value="{{ form_data.Fy | default(defaults.Fy, true) }}" required>
+                         <div class="form-text">(Note: Fx, Fy currently not used in reaction calc).</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Run Analysis</button>
+        </form>
+
+        {% if results %}
+        <div class="results-section">
+            <h2 class="mb-4">Analysis Results</h2>
+
+            {% if results.status == 'error' %}
+            <div class="alert alert-danger" role="alert">
+                <h4>Error During Analysis</h4>
+                <p>{{ results.message | default('An unspecified error occurred.', true) }}</p>
+                 {% if results.log %}
+                 <h5>Calculation Log (contains error details):</h5>
+                 <div class="log-box">
+                     {% for step in results.log %}
+                         {{ step }}<br>
+                     {% endfor %}
+                 </div>
+                 {% endif %}
+            </div>
+            {% elif results.status == 'success' %}
+            <div class="alert alert-success" role="alert">
+                Analysis completed successfully.
+            </div>
+
+            {% if results.warnings %}
+            <div class="alert alert-warning results-card" role="alert">
+                <h5>Warnings</h5>
+                <ul>
+                    {% for warning in results.warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="card results-card">
+                <div class="card-header">Summary</div>
+                <div class="card-body">
+                     <p><strong>Number of Piles:</strong> {{ results.num_piles | default('N/A') }}</p>
+                     <p><strong>Effective Shear Depth (d):</strong> {{ '%.3f' | format(results.pile_cap_shear_depth_ft | default('N/A')) }} ft</p>
+                     <p><strong>Total Self-Weight (incl. soil, less piles):</strong> {{ '%.2f' | format(results.total_self_weight_kips | default('N/A')) }} kips</p>
+                     <p><strong>Pile Centroid (X, Y):</strong> ({{ '%.3f' | format(results.pile_centroid[0] | default('N/A')) }}, {{ '%.3f' | format(results.pile_centroid[1] | default('N/A')) }}) ft</p>
+                     <p><strong>Adjusted Mx (incl. eccentricity):</strong> {{ '%.2f' | format(results.adjusted_Mx_kip_ft | default('N/A')) }} kip-ft</p>
+                     <p><strong>Adjusted My (incl. eccentricity):</strong> {{ '%.2f' | format(results.adjusted_My_kip_ft | default('N/A')) }} kip-ft</p>
+                </div>
+            </div>
+
+            <div class="card results-card">
+                <div class="card-header">Pile Reactions</div>
+                <div class="card-body">
+                    <pre><code>{{ results.pile_reactions_dataframe_str | default('No reaction data available.') }}</code></pre>
+                </div>
+            </div>
+
+             <div class="card results-card">
+                <div class="card-header">One-Way Shear (Beam Action)</div>
+                <div class="card-body">
+                    {% set shear_1_cap = results.shear_capacity_1_kips | default(1E-9) %}
+                    {% set shear_2_cap = results.shear_capacity_2_kips | default(1E-9) %}
+                    {% set shear_1_util = (results.net_one_way_shear_1_kips | default(0) / shear_1_cap * 100) if shear_1_cap != 0 else 'Inf' %}
+                    {% set shear_2_util = (results.net_one_way_shear_2_kips | default(0) / shear_2_cap * 100) if shear_2_cap != 0 else 'Inf' %}
+                     <p><strong>Section 1 (Horizontal Cut):</strong> Vu = {{ '%.2f' | format(results.net_one_way_shear_1_kips | default('N/A')) }} kips | φVc = {{ '%.2f' | format(results.shear_capacity_1_kips | default('N/A')) }} kips | Utilization = {{ '%.1f' | format(shear_1_util) if shear_1_util != 'Inf' else 'Inf' }}%</p>
+                     <p><strong>Section 2 (Vertical Cut):</strong> Vu = {{ '%.2f' | format(results.net_one_way_shear_2_kips | default('N/A')) }} kips | φVc = {{ '%.2f' | format(results.shear_capacity_2_kips | default('N/A')) }} kips | Utilization = {{ '%.1f' | format(shear_2_util) if shear_2_util != 'Inf' else 'Inf' }}%</p>
+                </div>
+            </div>
+
+            <div class="card results-card">
+                <div class="card-header">One-Way Moment (Flexure)</div>
+                <div class="card-body">
+                    <p><strong>Section 1 (Horizontal Cut, Design for Vert. Bending):</strong> Mu = {{ '%.2f' | format(results.net_one_way_moment_section_1_kip_ft | default('N/A')) }} kip-ft | As = {{ '%.3f' | format(results.area_of_steel_section_1_sqin | default('N/A')) }} sq.in</p>
+                    <p><strong>Section 2 (Vertical Cut, Design for Horiz. Bending):</strong> Mu = {{ '%.2f' | format(results.net_one_way_moment_section_2_kip_ft | default('N/A')) }} kip-ft | As = {{ '%.3f' | format(results.area_of_steel_section_2_sqin | default('N/A')) }} sq.in</p>
+                </div>
+            </div>
+
+            <div class="card results-card">
+                <div class="card-header">Punching Shear (Two-Way Action)</div>
+                <div class="card-body">
+                    <p><strong>Shear Force Outside Critical Perimeter (Vu):</strong> {{ '%.2f' | format(results.punching_shear_reaction_outside_kips | default('N/A')) }} kips</p>
+                    <p><strong>Punching Shear Capacity (φVc):</strong> {{ '%.2f' | format(results.punching_shear_capacity_Vc_kips | default('N/A')) }} kips</p>
+                    <p><strong>Utilization Ratio (Vu / φVc):</strong> {{ '%.1f' | format(results.punching_shear_utilization_percent | default('N/A')) }} %</p>
+                    <p><strong>Critical Perimeter (bo):</strong> {{ '%.2f' | format(results.punching_shear_perimeter_ft | default('N/A')) }} ft</p>
+                    </div>
+            </div>
+
+            {% if results.plot_url %}
+             <div class="card results-card">
+                <div class="card-header">Visualization</div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ results.plot_url }}" alt="Foundation Analysis Plot" class="img-fluid">
+                </div>
+            </div>
+            {% else %}
+             <div class="alert alert-info results-card" role="alert">
+                 Plot could not be generated or was not included in the results.
+            </div>
+            {% endif %}
+
+
+            {% if results.log %}
+             <div class="card results-card">
+                 <div class="card-header">Calculation Log</div>
+                <div class="card-body">
+                    <div class="log-box">
+                        {% for step in results.log %}
+                            {{ step }}<br>
+                        {% endfor %}
+                    </div>
+                 </div>
+            </div>
+            {% endif %}
+
+
+            {% endif %} {# End success block #}
+        </div>
+        {% endif %} {# End results block #}
+
+    </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        function toggleShapeInputs() {
+            const shapeType = document.querySelector('input[name="pile_cap_shape_type"]:checked').value;
+            const rectangleDiv = document.getElementById('rectangle-inputs');
+            const polygonDiv = document.getElementById('polygon-inputs');
+            const rectBL = document.getElementById('rect_bottom_left');
+            const rectTR = document.getElementById('rect_top_right');
+            const polyVertices = document.getElementById('pile_cap_vertices_str');
+
+            if (shapeType === 'rectangle') {
+                rectangleDiv.style.display = 'block';
+                polygonDiv.style.display = 'none';
+                rectBL.required = true; // Make rectangle fields required
+                rectTR.required = true;
+                polyVertices.required = false; // Make polygon field not required
+            } else if (shapeType === 'polygon') {
+                rectangleDiv.style.display = 'none';
+                polygonDiv.style.display = 'block';
+                rectBL.required = false; // Make rectangle fields not required
+                rectTR.required = false;
+                polyVertices.required = true; // Make polygon field required
+            } else {
+                 rectangleDiv.style.display = 'none';
+                 polygonDiv.style.display = 'none';
+                 rectBL.required = false;
+                 rectTR.required = false;
+                 polyVertices.required = false;
+            }
+        }
+
+        // Add event listeners to radio buttons
+        document.querySelectorAll('input[name="pile_cap_shape_type"]').forEach(radio => {
+            radio.addEventListener('change', toggleShapeInputs);
+        });
+
+        // Run on page load to set initial state based on default/repopulated value
+        document.addEventListener('DOMContentLoaded', toggleShapeInputs);
+    </script>
+</body>
+</html>
